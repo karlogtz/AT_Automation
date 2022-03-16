@@ -9,30 +9,45 @@ import org.openqa.selenium.WebElement;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BookStore extends Browser {
 
-    By titleText = By.linkText("Git Pocket Guide");
-    By findBooks = By.xpath("//span[@class='mr-2']");
+    String bookTitleToSearch = "Git Pocket Guide";
+    By booksTitles = By.xpath("//span[@class='mr-2']");
     By addToYourCollectionBttn = By.xpath("//button[text()='Add To Your Collection']");
+    By adID = By.id("close-fixedban");
 
     @Test
     public void addBookToCollection() throws InterruptedException, NoAlertPresentException {
         Profile profile = new Profile();
         profile.goToBookStore();
-        waitForElement(titleText);
-        driver.findElement(titleText).click();
+        if(driver.findElement(adID).isDisplayed()) {
+            handleAd(adID);
+        }
+        Thread.sleep(1000);
+        getBook(bookTitleToSearch);
         waitForElement(addToYourCollectionBttn);
+        //scrollToElement(addToYourCollectionBttn);
         driver.findElement(addToYourCollectionBttn).click();
         waitForAlert();
-        Alert alert = driver.switchTo().alert();
-        assertEquals("Book added to your collection.", alert.getText());
-        alert.accept();
+        assertAlert("Book added to your collection.");
+        assertTrue(profile.isBookInCollection(bookTitleToSearch));
     }
 
-    public void getBookByPosition(int position) {
-        List<WebElement> books = driver.findElements(findBooks);
-        books.get(position).click();
+    public void getBook(String bookTitle) {
+        boolean bookFound = false;
+        List<WebElement> books = driver.findElements(booksTitles);
+        if(books.size() > 0) {
+            for(WebElement book : books) {
+                if(book.getText().equalsIgnoreCase(bookTitle)) {
+                    book.click();
+                    bookFound = true;
+                    break;
+                }
+            }
+        }
+        System.out.println("Book was found? " + bookFound);
     }
 
 }
